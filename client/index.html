@@ -2,93 +2,159 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Arslan-MD Pairing</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Arslan-MD Pairing Code Generator</title>
   <style>
     body {
-      background: #f0f0f0;
-      font-family: sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #121212;
+      color: #eee;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding-top: 100px;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
     }
-    .container {
-      background: white;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.1);
-      text-align: center;
-      width: 90%;
-      max-width: 400px;
+    h1 {
+      margin-bottom: 10px;
+      color: #00ff99;
     }
-    input {
-      padding: 12px;
-      font-size: 16px;
-      width: 100%;
-      margin-top: 10px;
-      border: 1px solid #ccc;
+    input[type="text"] {
+      padding: 10px;
+      font-size: 18px;
+      width: 250px;
       border-radius: 6px;
+      border: none;
+      outline: none;
+      margin-bottom: 15px;
+      text-align: center;
+      letter-spacing: 2px;
     }
     button {
-      margin-top: 20px;
-      padding: 12px 20px;
-      background: #2d89ef;
-      color: white;
+      background: #00ff99;
       border: none;
+      padding: 12px 25px;
+      font-size: 16px;
       border-radius: 6px;
       cursor: pointer;
-      font-size: 16px;
+      transition: background 0.3s ease;
+      margin-right: 10px;
     }
-    #codeBox {
+    button:hover {
+      background: #00cc77;
+    }
+    #code {
       margin-top: 20px;
-      display: none;
+      font-size: 24px;
+      letter-spacing: 5px;
+      background: #222;
+      padding: 15px 30px;
+      border-radius: 8px;
+      user-select: all;
+      cursor: pointer;
+      color: #0f0;
     }
-    #pairingCode {
-      font-size: 20px;
-      font-weight: bold;
-      background: #e9ecef;
-      padding: 10px;
-      border-radius: 6px;
-      margin-bottom: 10px;
+    .buttons {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 10px;
+    }
+    #message {
+      margin-top: 20px;
+      font-size: 18px;
+      color: #ff4444;
+      min-height: 24px;
+      text-align: center;
+      max-width: 320px;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h2>Arslan-MD Pairing</h2>
-    <p>Enter your WhatsApp number (with country code):</p>
-    <input type="text" id="numberInput" placeholder="e.g. 923001234567"/>
-    <button onclick="getCode()">Get Pairing Code</button>
 
-    <div id="codeBox">
-      <div id="pairingCode">XXXXXX</div>
-      <button onclick="copyCode()">Copy Code</button>
-    </div>
+  <h1>Arslan-MD Pairing Code Generator</h1>
+  
+  <input type="text" id="numberInput" placeholder="Enter your WhatsApp number" maxlength="15" />
+
+  <div class="buttons">
+    <button id="generateBtn">Generate Code</button>
+    <button id="copyBtn" disabled>Copy Code</button>
   </div>
 
-  <script>
-    async function getCode() {
-      const number = document.getElementById('numberInput').value;
-      const response = await fetch('/generate-code', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ number })
-      });
-      const data = await response.json();
-      if (data.code) {
-        document.getElementById('pairingCode').innerText = data.code;
-        document.getElementById('codeBox').style.display = 'block';
-      } else {
-        alert('Something went wrong');
-      }
+  <div id="code" title="Click to copy pairing code"></div>
+  <div id="message"></div>
+
+<script>
+  const generateBtn = document.getElementById('generateBtn');
+  const copyBtn = document.getElementById('copyBtn');
+  const codeDiv = document.getElementById('code');
+  const messageDiv = document.getElementById('message');
+  const numberInput = document.getElementById('numberInput');
+
+  function validateNumber(number) {
+    // Basic validation: Only digits and 10-15 length
+    return /^\d{10,15}$/.test(number);
+  }
+
+  generateBtn.addEventListener('click', async () => {
+    const number = numberInput.value.trim();
+    messageDiv.textContent = '';
+    codeDiv.textContent = '';
+    copyBtn.disabled = true;
+
+    if (!validateNumber(number)) {
+      messageDiv.textContent = 'Please enter a valid WhatsApp number (10-15 digits).';
+      return;
     }
 
-    function copyCode() {
-      const code = document.getElementById('pairingCode').innerText;
-      navigator.clipboard.writeText(code);
-      alert('Code copied: ' + code);
+    try {
+      const response = await fetch('/generate-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ number })
+      });
+
+      if (!response.ok) {
+        messageDiv.textContent = 'Server error. Please try again later.';
+        return;
+      }
+
+      const data = await response.json();
+
+      if (data.code) {
+        codeDiv.textContent = data.code;
+        copyBtn.disabled = false;
+        messageDiv.style.color = '#0f0';
+        messageDiv.textContent = 'Your pairing code is ready!';
+
+      } else {
+        messageDiv.style.color = '#ff4444';
+        messageDiv.textContent = 'Error generating code.';
+      }
+
+    } catch (err) {
+      messageDiv.textContent = 'Network error. Please check your connection.';
     }
-  </script>
+  });
+
+  copyBtn.addEventListener('click', () => {
+    if (codeDiv.textContent) {
+      navigator.clipboard.writeText(codeDiv.textContent);
+      messageDiv.style.color = '#0f0';
+      messageDiv.textContent = 'Pairing code copied to clipboard!';
+    }
+  });
+
+  codeDiv.addEventListener('click', () => {
+    if (codeDiv.textContent) {
+      navigator.clipboard.writeText(codeDiv.textContent);
+      messageDiv.style.color = '#0f0';
+      messageDiv.textContent = 'Pairing code copied to clipboard!';
+    }
+  });
+</script>
+
 </body>
 </html>
