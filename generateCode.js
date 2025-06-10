@@ -1,10 +1,10 @@
 // generateCode.js
-function generateCode() {
-  const parts = [];
-  for (let i = 0; i < 6; i++) {
-    parts.push(Math.random().toString(36).substr(2, 2).toUpperCase());
-  }
-  return parts.join('-');
+function generatePairingCode(length = 8) {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let code = '';
+    for (let i = 0; i < length; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
 }
-
-module.exports = { generateCode };
+module.exports = generatePairingCode;
