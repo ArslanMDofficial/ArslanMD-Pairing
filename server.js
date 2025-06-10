@@ -1,14 +1,13 @@
 const express = require('express');
-const app = express();
 const path = require('path');
-const PORT = process.env.PORT || 3000;
+const app = express();
 
-// Serve static files (if you have frontend in a folder like 'client')
-app.use(express.static('client'));
+// Static serve
+app.use(express.static(path.join(__dirname, 'client')));
 
-// Default home route
+// Home page show karega index.html
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'client', 'index.html'));
+  res.sendFile(path.join(__dirname, 'client/index.html'));
 });
 
 // Your existing code (pairing endpoint, etc.) should be here
