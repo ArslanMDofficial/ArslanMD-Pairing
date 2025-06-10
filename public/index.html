@@ -1,58 +1,92 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Arslan-MD | Pairing Code</title>
+  <title>Arslan-MD | Pairing Code Generator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
     body {
-      font-family: Arial, sans-serif;
-      background: #f1f1f1;
-      text-align: center;
-      padding: 50px;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
     }
     .container {
-      background: white;
-      padding: 30px;
-      border-radius: 10px;
-      display: inline-block;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    input, button {
-      padding: 10px;
-      margin-top: 10px;
+      background: #1c1c1e;
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
       width: 100%;
+      max-width: 420px;
+      text-align: center;
+    }
+    h2 {
+      font-size: 28px;
+      margin-bottom: 15px;
+      color: #00f2fe;
+    }
+    p {
       font-size: 16px;
+      margin-bottom: 20px;
+    }
+    input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #00f2fe;
+      border-radius: 8px;
+      font-size: 16px;
+      margin-bottom: 20px;
+      background: transparent;
+      color: #fff;
     }
     button {
-      background-color: #007bff;
-      color: white;
+      padding: 12px 16px;
+      width: 100%;
+      font-size: 16px;
+      font-weight: 600;
+      background: #00f2fe;
+      color: #000;
       border: none;
+      border-radius: 8px;
       cursor: pointer;
+      transition: 0.3s ease;
+    }
+    button:hover {
+      background: #03e9f4;
+      color: #111;
+    }
+    #pairingResult {
+      margin-top: 25px;
     }
     #pairingCode {
       font-size: 24px;
       font-weight: bold;
-      color: green;
-      margin-top: 15px;
+      color: #00ffab;
+      margin-bottom: 10px;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>Arslan-MD Pairing Site</h2>
-    <p>Apna WhatsApp number enter karein:</p>
-    <input type="text" id="phoneInput" placeholder="03XXXXXXXXX" />
-    <button onclick="getPairingCode()">Generate Pairing Code</button>
+    <h2>🔗 Arslan-MD Pairing System</h2>
+    <p>Enter your WhatsApp number to get your secure pairing code.</p>
+    <input type="text" id="phoneInput" placeholder="9232370XXXXX" />
+    <button onclick="getPairingCode()">🚀 Generate Pairing Code</button><div id="pairingResult" style="display:none;">
+  <p>Your Secure Pairing Code:</p>
+  <div id="pairingCode"></div>
+  <button onclick="copyCode()">📋 Copy Code</button>
+</div>
 
-    <div id="pairingResult" style="display:none;">
-      <h3>Your Pairing Code:</h3>
-      <p id="pairingCode"></p>
-      <button onclick="copyCode()">Copy Code</button>
-    </div>
-  </div>
-
-  <script>
+  </div>  <script>
     async function getPairingCode() {
       const phone = document.getElementById('phoneInput').value.trim();
       if (!phone) {
@@ -74,9 +108,8 @@
     function copyCode() {
       const code = document.getElementById('pairingCode').innerText;
       navigator.clipboard.writeText(code).then(() => {
-        alert("Code copied to clipboard!");
+        alert("✅ Pairing code copied to clipboard!");
       });
     }
-  </script>
-</body>
+  </script></body>
 </html>
