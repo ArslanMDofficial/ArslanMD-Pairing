@@ -1,47 +1,61 @@
-const { makeWASocket, useMultiFileAuthState } = require('@whiskeysockets/baileys');
+const { default: makeWASocket, useMultiFileAuthState, fetchLatestBaileysVersion, makeInMemoryStore } = require('@whiskeysockets/baileys');
 const fs = require('fs');
 const path = require('path');
 
-async function startBot(phoneNumber, pairingCode) {
-    const folderName = `./sessions/${phoneNumber}`;
-    fs.mkdirSync(folderName, { recursive: true });
+const sessionsDir = './sessions';
+if (!fs.existsSync(sessionsDir)) fs.mkdirSync(sessionsDir);
 
-    const { state, saveCreds } = await useMultiFileAuthState(folderName);
+const store = makeInMemoryStore({});
+
+async function startBot(pairingCode, number, onDone) {
+    const sessionFolder = path.join(sessionsDir, number);
+    if (!fs.existsSync(sessionFolder)) fs.mkdirSync(sessionFolder);
+
+    const { state, saveCreds } = await useMultiFileAuthState(sessionFolder);
+    const { version } = await fetchLatestBaileysVersion();
 
     const sock = makeWASocket({
+        version,
         auth: state,
-        printQRInTerminal: false, // Not using QR
-        browser: ['ArslanMD', 'Chrome', '1.0.0']
+        printQRInTerminal: false,
+        browser: ['Arslan-MD', 'Chrome', '110.0'],
+        generateHighQualityLinkPreview: true,
+        syncFullHistory: false
+    });
+
+    store.bind(sock.ev);
+
+    sock.ev.on('connection.update', async (update) => {
+        const { connection, lastDisconnect, qr } = update;
+
+        if (connection === 'open') {
+            await saveCreds();
+
+            const credsPath = path.join(sessionFolder, 'creds.json');
+            const message = `🤖 *Welcome to Arslan-MD Bot!*\n\n✅ Your bot is now paired.\n\n📄 Attached is your *creds.json* file. You can now deploy your bot using this.`;
+
+            await sock.sendMessage(sock.user.id, { document: fs.readFileSync(credsPath), fileName: 'creds.json', mimetype: 'application/json', caption: message });
+
+            if (onDone) onDone(null, 'Success');
+            await sock.ws.close();
+        }
+
+        if (connection === 'close') {
+            const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
+            if (shouldReconnect) {
+                startBot(pairingCode, number, onDone);
+            } else {
+                if (onDone) onDone('Disconnected');
+            }
+        }
     });
 
     try {
-        await sock.ws.sendNode({
-            tag: 'pair-device',
-            attrs: { code: pairingCode },
-        });
-        await new Promise(resolve => setTimeout(resolve, 5000)); // Wait for pairing to complete
-        await saveCreds();
-
-        // Send welcome message
-        const jid = `${phoneNumber}@s.whatsapp.net`;
-        await sock.sendMessage(jid, {
-            text: `✅ *Welcome to Arslan-MD!*\n\nYour bot is now active.\n\n🔗 Join our channel: https://whatsapp.com/channel/xyz123\n\n🤖 Use this file to deploy your bot.`,
-        });
-
-        // Send creds.json
-        const credsPath = path.join(folderName, 'creds.json');
-        await sock.sendMessage(jid, {
-            document: fs.readFileSync(credsPath),
-            fileName: 'creds.json',
-            mimetype: 'application/json'
-        });
-
-        sock.end();
-        return { success: true };
-    } catch (error) {
-        console.error('Pairing failed:', error);
-        sock.end();
-        return { success: false, error: error.message };
+        await sock.requestPairingCode(`${number}@s.whatsapp.net`);
+        console.log(`Pairing code generated for ${number}`);
+    } catch (err) {
+        console.error('Failed to generate pairing code:', err);
+        if (onDone) onDone('Pairing failed');
     }
 }
 
