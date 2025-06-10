@@ -1,33 +1,94 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Arslan-MD Pairing</title>
+  <style>
+    body {
+      background: #f0f0f0;
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 100px;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      text-align: center;
+      width: 90%;
+      max-width: 400px;
+    }
+    input {
+      padding: 12px;
+      font-size: 16px;
+      width: 100%;
+      margin-top: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    button {
+      margin-top: 20px;
+      padding: 12px 20px;
+      background: #2d89ef;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    #codeBox {
+      margin-top: 20px;
+      display: none;
+    }
+    #pairingCode {
+      font-size: 20px;
+      font-weight: bold;
+      background: #e9ecef;
+      padding: 10px;
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+  </style>
 </head>
 <body>
-  <h1>Arslan-MD Pairing Code Generator</h1>
-  <form id="pairForm">
-    <input type="text" id="phoneNumber" placeholder="Enter your WhatsApp number" required>
-    <button type="submit">Generate Code</button>
-  </form>
-  <div id="result"></div>
+  <div class="container">
+    <h2>Arslan-MD Pairing</h2>
+    <p>Enter your WhatsApp number (with country code):</p>
+    <input type="text" id="numberInput" placeholder="e.g. 923001234567"/>
+    <button onclick="getCode()">Get Pairing Code</button>
+
+    <div id="codeBox">
+      <div id="pairingCode">XXXXXX</div>
+      <button onclick="copyCode()">Copy Code</button>
+    </div>
+  </div>
 
   <script>
-    const form = document.getElementById('pairForm');
-    const result = document.getElementById('result');
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const number = document.getElementById('phoneNumber').value;
-
-      const res = await fetch('/generate-code', {
+    async function getCode() {
+      const number = document.getElementById('numberInput').value;
+      const response = await fetch('/generate-code', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ number })
       });
+      const data = await response.json();
+      if (data.code) {
+        document.getElementById('pairingCode').innerText = data.code;
+        document.getElementById('codeBox').style.display = 'block';
+      } else {
+        alert('Something went wrong');
+      }
+    }
 
-      const data = await res.json();
-      result.innerHTML = `<h3>Your Pairing Code:</h3><p>${data.code}</p>`;
-    });
+    function copyCode() {
+      const code = document.getElementById('pairingCode').innerText;
+      navigator.clipboard.writeText(code);
+      alert('Code copied: ' + code);
+    }
   </script>
 </body>
 </html>
