@@ -1,62 +1,84 @@
-const { default: makeWASocket, useMultiFileAuthState, fetchLatestBaileysVersion, makeInMemoryStore } = require('@whiskeysockets/baileys');
+const { default: makeWASocket, useSingleFileAuthState, DisconnectReason, fetchLatestBaileysVersion, delay } = require('@whiskeysockets/baileys');
+const P = require('pino');
 const fs = require('fs');
 const path = require('path');
 
-const sessionsDir = './sessions';
-if (!fs.existsSync(sessionsDir)) fs.mkdirSync(sessionsDir);
+const authFolder = './auth_sessions';
 
-const store = makeInMemoryStore({});
+async function pairBot(code, userNumber) {
+  if (!fs.existsSync(authFolder)) fs.mkdirSync(authFolder, { recursive: true });
 
-async function startBot(pairingCode, number, onDone) {
-    const sessionFolder = path.join(sessionsDir, number);
-    if (!fs.existsSync(sessionFolder)) fs.mkdirSync(sessionFolder);
+  const authFile = path.join(authFolder, `${code}.json`);
+  const { state, saveState } = useSingleFileAuthState(authFile);
 
-    const { state, saveCreds } = await useMultiFileAuthState(sessionFolder);
-    const { version } = await fetchLatestBaileysVersion();
+  const { version, isLatest } = await fetchLatestBaileysVersion();
 
-    const sock = makeWASocket({
-        version,
-        auth: state,
-        printQRInTerminal: false,
-        browser: ['Arslan-MD', 'Chrome', '110.0'],
-        generateHighQualityLinkPreview: true,
-        syncFullHistory: false
-    });
+  const sock = makeWASocket({
+    version,
+    auth: state,
+    printQRInTerminal: true,
+    logger: P({ level: 'silent' }),
+  });
 
-    store.bind(sock.ev);
-
+  return new Promise((resolve, reject) => {
     sock.ev.on('connection.update', async (update) => {
-        const { connection, lastDisconnect, qr } = update;
+      const { connection, lastDisconnect, qr } = update;
 
-        if (connection === 'open') {
-            await saveCreds();
+      if (qr) {
+        console.log('QR Received. User scan kare:', qr);
+      }
 
-            const credsPath = path.join(sessionFolder, 'creds.json');
-            const message = `🤖 *Welcome to Arslan-MD Bot!*\n\n✅ Your bot is now paired.\n\n📄 Attached is your *creds.json* file. You can now deploy your bot using this.`;
+      if (connection === 'open') {
+        console.log('WhatsApp connected for code:', code);
 
-            await sock.sendMessage(sock.user.id, { document: fs.readFileSync(credsPath), fileName: 'creds.json', mimetype: 'application/json', caption: message });
+        // Save creds.json file path
+        const credsFile = authFile;
 
-            if (onDone) onDone(null, 'Success');
-            await sock.ws.close();
+        // Wait thoda time for Baileys to finalize saving
+        await delay(2000);
+
+        // WhatsApp message bhejna user ko with creds file (as attachment)
+        await sendCredsAndWelcome(sock, userNumber, credsFile);
+
+        resolve();
+      }
+
+      if (connection === 'close') {
+        const shouldReconnect = lastDisconnect.error?.output?.statusCode !== DisconnectReason.loggedOut;
+        if (!shouldReconnect) {
+          reject(new Error('Logged out, please scan QR again.'));
         }
-
-        if (connection === 'close') {
-            const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
-            if (shouldReconnect) {
-                startBot(pairingCode, number, onDone);
-            } else {
-                if (onDone) onDone('Disconnected');
-            }
-        }
+      }
     });
 
-    try {
-        await sock.requestPairingCode(`${number}@s.whatsapp.net`);
-        console.log(`Pairing code generated for ${number}`);
-    } catch (err) {
-        console.error('Failed to generate pairing code:', err);
-        if (onDone) onDone('Pairing failed');
-    }
+    sock.ev.on('creds.update', saveState);
+  });
 }
 
-module.exports = startBot;
+async function sendCredsAndWelcome(sock, userNumber, credsFile) {
+  try {
+    // Send welcome message
+    await sock.sendMessage(userNumber + '@s.whatsapp.net', { 
+      text: `Assalamualaikum! Apka pairing successful ho gaya hai. Ab aap apna Arslan-MD bot chalane ke liye apni creds.json file istemal kar sakte hain. File niche attach ki gayi hai.` 
+    });
+
+    // Send creds.json file
+    const fileData = fs.readFileSync(credsFile);
+    await sock.sendMessage(userNumber + '@s.whatsapp.net', {
+      document: fileData,
+      mimetype: 'application/json',
+      fileName: 'creds.json',
+      caption: 'Yeh aapki WhatsApp bot creds.json file hai. Isko safe rakhain.'
+    });
+
+    // Bot info message
+    await sock.sendMessage(userNumber + '@s.whatsapp.net', { 
+      text: `Arslan-MD Bot ke WhatsApp channel se juda rehne ke liye hamare social links check karain.\n\n- GitHub: https://github.com/ArslanMDofficial\n- Website: https://arslanmd.com\n\nShukriya!`
+    });
+
+  } catch (e) {
+    console.error('Error sending creds or messages:', e);
+  }
+}
+
+module.exports = { pairBot };
