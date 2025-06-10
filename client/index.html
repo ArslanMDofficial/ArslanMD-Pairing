@@ -1,14 +1,17 @@
-<!-- client/index.html -->
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>Arslan-MD Pairing</title>
 </head>
 <body>
-  <h2>Enter Your WhatsApp Number</h2>
-  <input type="text" id="number" placeholder="03XXXXXXXXX" />
-  <button onclick="generateCode()">Get Pairing Code</button>
-  <p id="codeResult"></p>
+  <h2>Enter your WhatsApp number</h2>
+  <form method="POST" action="/generate-code">
+    <input type="text" name="number" placeholder="923123456789" required>
+    <button type="submit">Get Pairing Code</button>
+  </form>
+</body>
+</html>
 
   <script>
     async function generateCode() {
