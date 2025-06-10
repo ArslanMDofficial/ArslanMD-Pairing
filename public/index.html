@@ -2,159 +2,81 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Arslan-MD Pairing Code Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Arslan-MD | Pairing Code</title>
   <style>
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #121212;
-      color: #eee;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      margin: 0;
-      padding: 20px;
-    }
-    h1 {
-      margin-bottom: 10px;
-      color: #00ff99;
-    }
-    input[type="text"] {
-      padding: 10px;
-      font-size: 18px;
-      width: 250px;
-      border-radius: 6px;
-      border: none;
-      outline: none;
-      margin-bottom: 15px;
+      font-family: Arial, sans-serif;
+      background: #f1f1f1;
       text-align: center;
-      letter-spacing: 2px;
+      padding: 50px;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      display: inline-block;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    input, button {
+      padding: 10px;
+      margin-top: 10px;
+      width: 100%;
+      font-size: 16px;
     }
     button {
-      background: #00ff99;
+      background-color: #007bff;
+      color: white;
       border: none;
-      padding: 12px 25px;
-      font-size: 16px;
-      border-radius: 6px;
       cursor: pointer;
-      transition: background 0.3s ease;
-      margin-right: 10px;
     }
-    button:hover {
-      background: #00cc77;
-    }
-    #code {
-      margin-top: 20px;
+    #pairingCode {
       font-size: 24px;
-      letter-spacing: 5px;
-      background: #222;
-      padding: 15px 30px;
-      border-radius: 8px;
-      user-select: all;
-      cursor: pointer;
-      color: #0f0;
-    }
-    .buttons {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin-top: 10px;
-    }
-    #message {
-      margin-top: 20px;
-      font-size: 18px;
-      color: #ff4444;
-      min-height: 24px;
-      text-align: center;
-      max-width: 320px;
+      font-weight: bold;
+      color: green;
+      margin-top: 15px;
     }
   </style>
 </head>
 <body>
+  <div class="container">
+    <h2>Arslan-MD Pairing Site</h2>
+    <p>Apna WhatsApp number enter karein:</p>
+    <input type="text" id="phoneInput" placeholder="03XXXXXXXXX" />
+    <button onclick="getPairingCode()">Generate Pairing Code</button>
 
-  <h1>Arslan-MD Pairing Code Generator</h1>
-  
-  <input type="text" id="numberInput" placeholder="Enter your WhatsApp number" maxlength="15" />
-
-  <div class="buttons">
-    <button id="generateBtn">Generate Code</button>
-    <button id="copyBtn" disabled>Copy Code</button>
+    <div id="pairingResult" style="display:none;">
+      <h3>Your Pairing Code:</h3>
+      <p id="pairingCode"></p>
+      <button onclick="copyCode()">Copy Code</button>
+    </div>
   </div>
 
-  <div id="code" title="Click to copy pairing code"></div>
-  <div id="message"></div>
-
-<script>
-  const generateBtn = document.getElementById('generateBtn');
-  const copyBtn = document.getElementById('copyBtn');
-  const codeDiv = document.getElementById('code');
-  const messageDiv = document.getElementById('message');
-  const numberInput = document.getElementById('numberInput');
-
-  function validateNumber(number) {
-    // Basic validation: Only digits and 10-15 length
-    return /^\d{10,15}$/.test(number);
-  }
-
-  generateBtn.addEventListener('click', async () => {
-    const number = numberInput.value.trim();
-    messageDiv.textContent = '';
-    codeDiv.textContent = '';
-    copyBtn.disabled = true;
-
-    if (!validateNumber(number)) {
-      messageDiv.textContent = 'Please enter a valid WhatsApp number (10-15 digits).';
-      return;
-    }
-
-    try {
-      const response = await fetch('/generate-code', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ number })
-      });
-
-      if (!response.ok) {
-        messageDiv.textContent = 'Server error. Please try again later.';
+  <script>
+    async function getPairingCode() {
+      const phone = document.getElementById('phoneInput').value.trim();
+      if (!phone) {
+        alert("Please enter your WhatsApp number.");
         return;
       }
 
-      const data = await response.json();
+      const res = await fetch('/generate-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone })
+      });
 
-      if (data.code) {
-        codeDiv.textContent = data.code;
-        copyBtn.disabled = false;
-        messageDiv.style.color = '#0f0';
-        messageDiv.textContent = 'Your pairing code is ready!';
-
-      } else {
-        messageDiv.style.color = '#ff4444';
-        messageDiv.textContent = 'Error generating code.';
-      }
-
-    } catch (err) {
-      messageDiv.textContent = 'Network error. Please check your connection.';
+      const data = await res.json();
+      document.getElementById('pairingCode').innerText = data.pairingCode;
+      document.getElementById('pairingResult').style.display = 'block';
     }
-  });
 
-  copyBtn.addEventListener('click', () => {
-    if (codeDiv.textContent) {
-      navigator.clipboard.writeText(codeDiv.textContent);
-      messageDiv.style.color = '#0f0';
-      messageDiv.textContent = 'Pairing code copied to clipboard!';
+    function copyCode() {
+      const code = document.getElementById('pairingCode').innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        alert("Code copied to clipboard!");
+      });
     }
-  });
-
-  codeDiv.addEventListener('click', () => {
-    if (codeDiv.textContent) {
-      navigator.clipboard.writeText(codeDiv.textContent);
-      messageDiv.style.color = '#0f0';
-      messageDiv.textContent = 'Pairing code copied to clipboard!';
-    }
-  });
-</script>
-
+  </script>
 </body>
 </html>
