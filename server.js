@@ -1,28 +1,18 @@
 const express = require('express');
-const startBot = require('./pairBot');
 const app = express();
+const path = require('path');
+const PORT = process.env.PORT || 3000;
 
-app.use(express.json());
+// Serve static files (if you have frontend in a folder like 'client')
 app.use(express.static('client'));
 
-app.post('/pair', async (req, res) => {
-    const { code, number } = req.body;
-
-    if (!code || !number) {
-        return res.status(400).json({ error: 'Pairing code or number missing.' });
-    }
-
-    // Run the bot
-    try {
-        await startBot(code, number);
-        res.status(200).json({ message: 'Bot is pairing, please wait...' });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Failed to start bot.' });
-    }
+// Default home route
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'client', 'index.html'));
 });
 
-const PORT = process.env.PORT || 3000;
+// Your existing code (pairing endpoint, etc.) should be here
+
 app.listen(PORT, () => {
-    console.log(`✅ Server running on port ${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });
