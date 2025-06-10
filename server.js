@@ -1,26 +1,27 @@
 const express = require('express');
-const path = require('path');
+const bodyParser = require('body-parser');
+const cors = require('cors');
+const fs = require('fs');
+const generateCode = require('./generateCode');
+
 const app = express();
+app.use(cors());
+app.use(bodyParser.json());
+app.use(express.static('client'));
+
+const pairingCodes = {}; // temp memory, production me DB use karein
+
+app.post('/generate', (req, res) => {
+    const { number } = req.body;
+    if (!number) return res.status(400).json({ error: 'Number is required' });
+
+    const code = generateCode(8);
+    pairingCodes[code] = number;
+
+    // TODO: Baileys se pairing karna yahan trigger hoga
+    console.log(`Generated pairing code ${code} for ${number}`);
+    res.json({ code });
+});
+
 const PORT = process.env.PORT || 3000;
-
-app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Route to generate 8-character pairing code
-app.post('/generate-code', (req, res) => {
-  const pairingCode = generatePairingCode();
-  res.json({ pairingCode });
-});
-
-function generatePairingCode() {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let code = '';
-  for (let i = 0; i < 8; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return code;
-}
-
-app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
