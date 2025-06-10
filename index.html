@@ -1,0 +1,26 @@
+<!-- client/index.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Arslan-MD Pairing</title>
+</head>
+<body>
+  <h2>Enter Your WhatsApp Number</h2>
+  <input type="text" id="number" placeholder="03XXXXXXXXX" />
+  <button onclick="generateCode()">Get Pairing Code</button>
+  <p id="codeResult"></p>
+
+  <script>
+    async function generateCode() {
+      const number = document.getElementById('number').value;
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ number })
+      });
+      const data = await res.json();
+      document.getElementById('codeResult').innerText = data.code ? `Your Code: ${data.code}` : data.error;
+    }
+  </script>
+</body>
+</html>
