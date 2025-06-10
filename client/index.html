@@ -1,29 +1,33 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
   <title>Arslan-MD Pairing</title>
 </head>
 <body>
-  <h2>Enter your WhatsApp number</h2>
-  <form method="POST" action="/generate-code">
-    <input type="text" name="number" placeholder="923123456789" required>
-    <button type="submit">Get Pairing Code</button>
+  <h1>Arslan-MD Pairing Code Generator</h1>
+  <form id="pairForm">
+    <input type="text" id="phoneNumber" placeholder="Enter your WhatsApp number" required>
+    <button type="submit">Generate Code</button>
   </form>
-</body>
-</html>
+  <div id="result"></div>
 
   <script>
-    async function generateCode() {
-      const number = document.getElementById('number').value;
-      const res = await fetch('/api/generate', {
+    const form = document.getElementById('pairForm');
+    const result = document.getElementById('result');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const number = document.getElementById('phoneNumber').value;
+
+      const res = await fetch('/generate-code', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ number })
       });
+
       const data = await res.json();
-      document.getElementById('codeResult').innerText = data.code ? `Your Code: ${data.code}` : data.error;
-    }
+      result.innerHTML = `<h3>Your Pairing Code:</h3><p>${data.code}</p>`;
+    });
   </script>
 </body>
 </html>
