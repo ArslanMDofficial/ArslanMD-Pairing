@@ -1,42 +1,63 @@
 const express = require('express');
 const cors = require('cors');
-const bodyParser = require('body-parser');
+const crypto = require('crypto');
 
 const app = express();
-app.use(cors()); // Frontend se request allow karne ke liye
-app.use(bodyParser.json()); // JSON body parse karne ke liye
+app.use(cors());
+app.use(express.json());
 
-// Simple in-memory store for pairing codes (production me DB use karna chahiye)
+const PORT = process.env.PORT || 3000;
+
+// In-memory store: pairingCode => phoneNumber
 const pairingCodes = new Map();
 
+// Generate 6-part pairing code (e.g. KE3FAS)
 function generatePairingCode() {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let code = '';
-  for(let i=0; i<6; i++){
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return code;
+  return crypto.randomBytes(3).toString('hex').toUpperCase(); // 6 hex chars
 }
 
-// API route for generating pairing code
+// Endpoint to generate pairing code for a given phone number
 app.post('/generate-pairing-code', (req, res) => {
   const { phoneNumber } = req.body;
-  
-  if(!phoneNumber) {
+
+  if (!phoneNumber) {
     return res.status(400).json({ error: 'Phone number is required' });
   }
 
-  // Generate unique code (6 chars)
-  let code;
-  do {
-    code = generatePairingCode();
-  } while(pairingCodes.has(code));
-
-  // Save pairing code with phone number
+  const code = generatePairingCode();
   pairingCodes.set(code, phoneNumber);
 
-  res.json({ pairingCode: code });
+  return res.json({ pairingCode: code });
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// Endpoint to verify pairing code and return creds.json (dummy creds for example)
+app.post('/verify-pairing-code', (req, res) => {
+  const { pairingCode } = req.body;
+
+  if (!pairingCode) {
+    return res.status(400).json({ error: 'Pairing code is required' });
+  }
+
+  const phoneNumber = pairingCodes.get(pairingCode);
+
+  if (!phoneNumber) {
+    return res.status(400).json({ error: 'Invalid or expired pairing code' });
+  }
+
+  // Here generate real creds.json for the phoneNumber
+  // For example, dummy creds object:
+  const creds = {
+    phoneNumber,
+    botName: 'Arslan-MD',
+    welcomeMessage: `Welcome to Arslan-MD bot! Your number ${phoneNumber} is now linked.`,
+  };
+
+  // Remove pairing code after use (one-time)
+  pairingCodes.delete(pairingCode);
+
+  return res.json({ message: 'Pairing successful', creds });
+});
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
