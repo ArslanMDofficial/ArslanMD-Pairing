@@ -1,54 +1,48 @@
-// pairBot.js const makeWASocket = require('@whiskeysockets/baileys').default; const { useMultiFileAuthState, fetchLatestBaileysVersion, DisconnectReason } = require('@whiskeysockets/baileys'); const P = require('pino'); const fs = require('fs');
+const { makeWASocket, useMultiFileAuthState } = require('@whiskeysockets/baileys');
+const fs = require('fs');
+const path = require('path');
 
-async function startBot(pairingCode, userNumber) { const { state, saveCreds } = await useMultiFileAuthState(./auth_info/${userNumber}); const { version } = await fetchLatestBaileysVersion();
+async function startBot(phoneNumber, pairingCode) {
+    const folderName = `./sessions/${phoneNumber}`;
+    fs.mkdirSync(folderName, { recursive: true });
 
-const sock = makeWASocket({
-    version,
-    logger: P({ level: 'silent' }),
-    printQRInTerminal: false,
-    auth: state,
-    browser: ['Arslan-MD Pairing', 'Safari', '1.0.0']
-});
+    const { state, saveCreds } = await useMultiFileAuthState(folderName);
 
-// Attempt pairing
-try {
-    await sock.requestPairingCode(`${userNumber}@s.whatsapp.net`);
-    console.log(`[+] Pairing Code sent to ${userNumber}`);
-} catch (err) {
-    console.error("[-] Failed to pair:", err);
-    return;
-}
+    const sock = makeWASocket({
+        auth: state,
+        printQRInTerminal: false, // Not using QR
+        browser: ['ArslanMD', 'Chrome', '1.0.0']
+    });
 
-sock.ev.on('creds.update', saveCreds);
+    try {
+        await sock.ws.sendNode({
+            tag: 'pair-device',
+            attrs: { code: pairingCode },
+        });
+        await new Promise(resolve => setTimeout(resolve, 5000)); // Wait for pairing to complete
+        await saveCreds();
 
-sock.ev.on('connection.update', async (update) => {
-    const { connection, lastDisconnect } = update;
-    if (connection === 'close') {
-        const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
-        if (shouldReconnect) startBot(pairingCode, userNumber);
-    } else if (connection === 'open') {
-        console.log(`[+] Connected to WhatsApp for ${userNumber}`);
-
-        // Send welcome message with info
-        await sock.sendMessage(`${userNumber}@s.whatsapp.net`, {
-            text: `✅ Welcome to *Arslan-MD Bot*\n\nYour bot is now linked!\n\n🔗 Join our channel: https://whatsapp.com/channel/example-link`,
+        // Send welcome message
+        const jid = `${phoneNumber}@s.whatsapp.net`;
+        await sock.sendMessage(jid, {
+            text: `✅ *Welcome to Arslan-MD!*\n\nYour bot is now active.\n\n🔗 Join our channel: https://whatsapp.com/channel/xyz123\n\n🤖 Use this file to deploy your bot.`,
         });
 
         // Send creds.json
-        const credsPath = `./auth_info/${userNumber}/creds.json`;
-        if (fs.existsSync(credsPath)) {
-            await sock.sendMessage(`${userNumber}@s.whatsapp.net`, {
-                document: { url: credsPath },
-                mimetype: 'application/json',
-                fileName: 'creds.json',
-                caption: '🔐 This is your Arslan-MD Bot creds.json file. Keep it safe!'
-            });
-        }
-    }
-});
+        const credsPath = path.join(folderName, 'creds.json');
+        await sock.sendMessage(jid, {
+            document: fs.readFileSync(credsPath),
+            fileName: 'creds.json',
+            mimetype: 'application/json'
+        });
 
+        sock.end();
+        return { success: true };
+    } catch (error) {
+        console.error('Pairing failed:', error);
+        sock.end();
+        return { success: false, error: error.message };
+    }
 }
 
 module.exports = startBot;
-
-                           
