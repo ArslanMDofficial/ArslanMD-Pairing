@@ -33,40 +33,19 @@ async function pairBotWithNumber(phoneNumber) {
 
     sock.ev.on("creds.update", saveCreds);
 
-    return new Promise(async (resolve, reject) => {
-        let handled = false;
-
-        sock.ev.on("connection.update", async ({ connection, lastDisconnect }) => {
-            if (handled) return;
-            handled = true;
-
-            if (connection === "open") {
-                console.log("✅ Already paired");
-                return resolve("Already paired");
-            }
-
-            if (connection === "close") {
-                const code = lastDisconnect?.error?.output?.statusCode || 0;
-                if (code !== 401) {
-                    return reject(new Error("Connection closed unexpectedly"));
-                }
-            }
-        });
-
+    if (!sock.authState.creds.registered) {
         try {
-            if (!sock.authState.creds.registered) {
-                const code = await sock.requestPairingCode(cleanNumber);
-                const formatted = code?.match(/.{1,4}/g)?.join("-") || code;
-                console.log("✅ Pairing Code:", formatted);
-                return resolve(formatted);
-            } else {
-                return resolve("Already registered");
-            }
+            const code = await sock.requestPairingCode(cleanNumber);
+            const formatted = code?.match(/.{1,4}/g)?.join("-") || code;
+            console.log("✅ Pairing Code:", formatted);
+            return formatted;
         } catch (err) {
-            console.error("❌ Error generating pairing code:", err);
-            return reject(err);
+            console.error("❌ Pairing failed:", err);
+            throw new Error("Pairing failed: " + err.message);
         }
-    });
+    } else {
+        throw new Error("Number is already registered.");
+    }
 }
 
 module.exports = { pairBotWithNumber };
