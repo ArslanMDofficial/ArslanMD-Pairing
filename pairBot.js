@@ -1,60 +1,72 @@
-const fs = require('fs'); const pino = require('pino'); const { default: makeWASocket, Browsers, delay, useMultiFileAuthState, BufferJSON, fetchLatestBaileysVersion, PHONENUMBER_MCC, jidNormalizedUser, makeCacheableSignalKeyStore } = require("@whiskeysockets/baileys"); const NodeCache = require("node-cache"); const chalk = require("chalk");
+const fs = require('fs');
+const Pino = require('pino');
+const NodeCache = require('node-cache');
+const {
+  default: makeWASocket,
+  useMultiFileAuthState,
+  fetchLatestBaileysVersion,
+  PHONENUMBER_MCC,
+  makeCacheableSignalKeyStore,
+  jidNormalizedUser,
+  Browsers
+} = require('@whiskeysockets/baileys');
+const chalk = require('chalk');
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-async function pairBot(phoneNumber) { try { const { version } = await fetchLatestBaileysVersion(); const { state, saveCreds } = await useMultiFileAuthState(./sessions/${phoneNumber}); const msgRetryCounterCache = new NodeCache();
+async function pairBot(phoneNumber) {
+  if (!phoneNumber) throw new Error('Phone number is required');
 
-const sock = makeWASocket({
-  version,
-  logger: pino({ level: 'silent' }),
-  browser: Browsers.windows('Firefox'),
-  auth: {
-    creds: state.creds,
-    keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "fatal" }).child({ level: "fatal" }))
-  },
-  printQRInTerminal: false,
-  markOnlineOnConnect: true,
-  generateHighQualityLinkPreview: true,
-  getMessage: async (key) => {
-    const jid = jidNormalizedUser(key.remoteJid);
-    const msg = await store.loadMessage(jid, key.id);
-    return msg?.message || "";
-  },
-  msgRetryCounterCache,
-  defaultQueryTimeoutMs: undefined
-});
-
-if (!sock.authState.creds.registered) {
   phoneNumber = phoneNumber.replace(/[^0-9]/g, '');
 
   if (!Object.keys(PHONENUMBER_MCC).some(v => phoneNumber.startsWith(v))) {
-    console.log(chalk.red("Invalid phone number. Must start with country code (e.g. +92..."));
-    return null;
+    throw new Error('Phone number must start with correct country code (e.g. +92)');
   }
 
-  const codeRaw = await sock.requestPairingCode(phoneNumber);
-  const code = codeRaw?.match(/.{1,4}/g)?.join("-") || codeRaw;
-  console.log(chalk.green("Pairing Code for " + phoneNumber + ": "), chalk.white(code));
-  return code;
+  const { state, saveCreds } = await useMultiFileAuthState('./sessions/' + phoneNumber);
+  const msgRetryCounterCache = new NodeCache();
+  const { version } = await fetchLatestBaileysVersion();
+
+  const sock = makeWASocket({
+    version,
+    logger: Pino({ level: 'silent' }),
+    printQRInTerminal: false,
+    browser: Browsers.windows('ArslanMD'),
+    auth: {
+      creds: state.creds,
+      keys: makeCacheableSignalKeyStore(state.keys, Pino({ level: "fatal" }).child({ level: "fatal" }))
+    },
+    msgRetryCounterCache
+  });
+
+  let pairingCode = null;
+
+  if (!sock.authState.creds.registered) {
+    pairingCode = await sock.requestPairingCode(phoneNumber);
+    pairingCode = pairingCode?.slice(0, 8).match(/.{1,4}/g)?.join('-') || pairingCode;
+    console.log(chalk.greenBright("Pairing Code:"), pairingCode);
+  }
+
+  sock.ev.on('creds.update', saveCreds);
+
+  sock.ev.on('connection.update', async (update) => {
+    const { connection } = update;
+
+    if (connection === 'open') {
+      await delay(4000);
+      const file = fs.readFileSync(`./sessions/${phoneNumber}/creds.json`);
+      await sock.sendMessage(sock.user.id, { text: `🎉 Bot Connected Successfully\n\nWelcome to Arslan-MD!` });
+      await sock.sendMessage(sock.user.id, {
+        document: file,
+        mimetype: 'application/json',
+        fileName: 'creds.json'
+      });
+
+      await delay(3000);
+      process.exit(0); // End process after pairing and sending
+    }
+  });
+
+  return { code: pairingCode };
 }
 
-sock.ev.on("connection.update", async ({ connection }) => {
-  if (connection === "open") {
-    await delay(10000);
-    await sock.sendMessage(sock.user.id, { text: `🎉 Bot linked successfully with your number!` });
-    const session = fs.readFileSync(`./sessions/${phoneNumber}/creds.json`);
-    const sent = await sock.sendMessage(sock.user.id, {
-      document: session,
-      mimetype: 'application/json',
-      fileName: 'creds.json'
-    });
-    await sock.sendMessage(sock.user.id, { text: `⚠️ Do not share this file with anyone.` }, { quoted: sent });
-    process.exit(0);
-  }
-});
-
-sock.ev.on('creds.update', saveCreds);
-
-} catch (err) { console.error("Pairing failed:", err); return null; } }
-
 module.exports = pairBot;
-
-    
