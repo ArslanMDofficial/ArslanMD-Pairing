@@ -3,103 +3,158 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Arslan-MD Pairing</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <title>Arslan-MD | WhatsApp Pairing</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet"/>
   <style>
-    body {
+    * {
+      margin: 0; padding: 0;
+      box-sizing: border-box;
       font-family: 'Poppins', sans-serif;
-      background: linear-gradient(135deg, #1f1c2c, #928dab);
+    }
+
+    body {
+      background: linear-gradient(to right, #232526, #414345);
       color: white;
       display: flex;
-      flex-direction: column;
-      align-items: center;
       justify-content: center;
-      height: 100vh;
-      margin: 0;
+      align-items: center;
+      min-height: 100vh;
     }
+
     .container {
-      background: #2d2a41;
-      padding: 40px;
-      border-radius: 20px;
-      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-      text-align: center;
-      max-width: 400px;
-      width: 90%;
-    }
-    input[type="text"] {
-      padding: 12px;
+      background-color: #2c2f33;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.4);
       width: 100%;
-      margin: 20px 0;
+      max-width: 500px;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 20px;
       border: none;
-      border-radius: 10px;
+      border-radius: 8px;
       font-size: 16px;
     }
+
     button {
-      padding: 12px 20px;
-      background-color: #6c63ff;
+      width: 100%;
+      padding: 12px;
+      background-color: #5865f2;
       color: white;
       border: none;
-      border-radius: 10px;
-      cursor: pointer;
+      border-radius: 8px;
       font-size: 16px;
-      transition: background 0.3s;
+      cursor: pointer;
+      transition: background 0.3s ease;
     }
+
     button:hover {
-      background-color: #5848e5;
+      background-color: #4752c4;
     }
+
     .code-box {
       margin-top: 20px;
-      background: #1e1c29;
       padding: 15px;
-      border-radius: 10px;
-      font-size: 20px;
-      letter-spacing: 2px;
-      word-break: break-all;
+      background-color: #1e1e1e;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 18px;
+      font-weight: bold;
     }
+
     .copy-btn {
-      margin-top: 10px;
-      background-color: #43cea2;
+      background-color: #43b581;
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+
+    .error {
+      margin-top: 15px;
+      color: #ff5555;
+      text-align: center;
+    }
+
+    .success {
+      margin-top: 15px;
+      color: #43b581;
+      text-align: center;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>Arslan-MD WhatsApp Bot Pairing</h2>
-    <input type="text" id="number" placeholder="Apna WhatsApp number likhein (e.g. 923001234567)" />
-    <button onclick="generatePairingCode()">Pairing Code Le</button>
-    <div id="result" class="code-box" style="display:none;"></div>
-    <button id="copyBtn" class="copy-btn" style="display:none;" onclick="copyCode()">Copy Code</button>
+    <h2>🔒 WhatsApp Bot Pairing</h2>
+    <input type="text" id="phoneNumber" placeholder="Enter your WhatsApp number with country code (e.g. 923001234567)" />
+    <button onclick="generateCode()">🔗 Generate Pairing Code</button>
+
+    <div id="result" style="display: none;">
+      <div class="code-box">
+        <span id="pairingCode">ABC12345</span>
+        <button class="copy-btn" onclick="copyCode()">📋 Copy</button>
+      </div>
+      <p class="success">Send this code to the bot to pair.</p>
+    </div>
+
+    <p class="error" id="error" style="display: none;"></p>
   </div>
 
   <script>
-    async function generatePairingCode() {
-      const number = document.getElementById("number").value.trim();
-      if (!number.match(/^\d{10,15}$/)) {
-        alert("Sahi WhatsApp number likhein (e.g. 923001234567)");
+    async function generateCode() {
+      const number = document.getElementById('phoneNumber').value.trim();
+      const errorEl = document.getElementById('error');
+      const resultEl = document.getElementById('result');
+      const codeEl = document.getElementById('pairingCode');
+
+      errorEl.style.display = 'none';
+      resultEl.style.display = 'none';
+
+      if (!number || number.length < 10) {
+        errorEl.innerText = "❌ Please enter a valid WhatsApp number.";
+        errorEl.style.display = 'block';
         return;
       }
 
-      const res = await fetch("/generate", {
-        method: "POST",
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ number })
-      });
+      try {
+        const res = await fetch('/pair', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ number })
+        });
 
-      const data = await res.json();
-      if (data.code) {
-        document.getElementById("result").style.display = "block";
-        document.getElementById("result").innerText = data.code;
-        document.getElementById("copyBtn").style.display = "inline-block";
-      } else {
-        alert("Kuch masla hua. Try dobara.");
+        const data = await res.json();
+
+        if (!res.ok) {
+          errorEl.innerText = "❌ " + (data.error || "Something went wrong.");
+          errorEl.style.display = 'block';
+          return;
+        }
+
+        codeEl.innerText = data.code;
+        resultEl.style.display = 'block';
+      } catch (err) {
+        errorEl.innerText = "❌ Server error. Try again later.";
+        errorEl.style.display = 'block';
       }
     }
 
     function copyCode() {
-      const text = document.getElementById("result").innerText;
-      navigator.clipboard.writeText(text).then(() => {
-        alert("Pairing Code Copy hogaya!");
-      });
+      const code = document.getElementById('pairingCode').innerText;
+      navigator.clipboard.writeText(code);
+      alert("✅ Code copied to clipboard!");
     }
   </script>
 </body>
