@@ -1,155 +1,151 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Arslan-MD | WhatsApp Pairing</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet"/>
-  <style>
-    * {
-      margin: 0; padding: 0;
-      box-sizing: border-box;
-      font-family: 'Poppins', sans-serif;
-    }body {
-  background: linear-gradient(to right, #232526, #414345);
-  color: white;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-}
-
-.container {
-  background-color: #2c2f33;
-  padding: 30px;
-  border-radius: 15px;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.4);
-  width: 100%;
-  max-width: 500px;
-}
-
-h2 {
-  margin-bottom: 20px;
-  text-align: center;
-}
-
-input[type="text"] {
-  width: 100%;
-  padding: 12px;
-  margin-bottom: 20px;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-}
-
-button {
-  width: 100%;
-  padding: 12px;
-  background-color: #5865f2;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background 0.3s ease;
-}
-
-button:hover {
-  background-color: #4752c4;
-}
-
-.code-box {
-  margin-top: 20px;
-  padding: 15px;
-  background-color: #1e1e1e;
-  border-radius: 8px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 18px;
-  font-weight: bold;
-}
-
-.copy-btn {
-  background-color: #43b581;
-  color: white;
-  border: none;
-  padding: 6px 10px;
-  border-radius: 5px;
-  cursor: pointer;
-  margin-left: 10px;
-}
-
-.error {
-  margin-top: 15px;
-  color: #ff5555;
-  text-align: center;
-}
-
-.success {
-  margin-top: 15px;
-  color: #43b581;
-  text-align: center;
-}
-
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Arslan-MD WhatsApp Bot Pairing</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+  body {
+    margin: 0; padding: 0; background: #121212; color: #eee; font-family: 'Poppins', sans-serif;
+    display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh;
+  }
+  .container {
+    background: #1f1f1f; padding: 30px 40px; border-radius: 12px; width: 100%; max-width: 420px; box-shadow: 0 0 20px #00bcd4cc;
+  }
+  h1 {
+    text-align: center; margin-bottom: 24px; color: #00bcd4;
+    text-shadow: 0 0 8px #00bcd4;
+  }
+  label {
+    font-weight: 600; font-size: 1.1rem; display: block; margin-bottom: 8px;
+  }
+  input[type="tel"] {
+    width: 100%; padding: 12px 15px; font-size: 1rem; border-radius: 8px; border: none;
+    background: #2a2a2a; color: #eee;
+    box-sizing: border-box;
+  }
+  input[type="tel"]::placeholder {
+    color: #999;
+  }
+  button {
+    margin-top: 20px; width: 100%; padding: 14px; font-size: 1.1rem; font-weight: 600;
+    background: #00bcd4; color: #121212; border: none; border-radius: 8px;
+    cursor: pointer; transition: background-color 0.3s ease;
+  }
+  button:hover {
+    background: #0097a7;
+  }
+  .output {
+    margin-top: 28px; font-size: 1.2rem; font-weight: 600; text-align: center;
+    background: #222; padding: 14px 20px; border-radius: 10px; word-break: break-word;
+    position: relative;
+  }
+  .copy-btn {
+    position: absolute; top: 50%; right: 12px; transform: translateY(-50%);
+    background: #00bcd4; border: none; padding: 6px 10px; border-radius: 6px;
+    color: #121212; font-weight: 700; cursor: pointer; transition: background-color 0.3s ease;
+  }
+  .copy-btn:hover {
+    background: #0097a7;
+  }
+  .error {
+    margin-top: 16px; color: #ff4d4d; font-weight: 600; text-align: center;
+  }
+  footer {
+    margin-top: 40px; text-align: center; color: #555; font-size: 0.9rem;
+  }
+  @media (max-width: 480px) {
+    .container {
+      padding: 24px 20px;
+      width: 90%;
+    }
+  }
+</style>
 </head>
 <body>
   <div class="container">
-    <h2>🔒 WhatsApp Bot Pairing</h2>
-    <input type="text" id="phoneNumber" placeholder="Enter your WhatsApp number with country code (e.g. 923001234567)" />
-    <button onclick="generateCode()">🔗 Generate Pairing Code</button><div id="result" style="display: none;">
-  <div class="code-box">
-    <span id="pairingCode">ABC12345</span>
-    <button class="copy-btn" onclick="copyCode()">🗌 Copy</button>
+    <h1>Arslan-MD WhatsApp Bot Pairing</h1>
+    <label for="phoneInput">Enter your WhatsApp Number (with country code)</label>
+    <input
+      type="tel"
+      id="phoneInput"
+      placeholder="+923XXXXXXXXX"
+      pattern="^\+[0-9]{10,15}$"
+      required
+    />
+    <button id="submitBtn">Get Pairing Code</button>
+    <div id="errorMsg" class="error"></div>
+    <div id="codeOutput" class="output" style="display:none;">
+      Pairing Code: <span id="pairingCodeText"></span>
+      <button class="copy-btn" id="copyBtn" title="Copy code">Copy</button>
+    </div>
   </div>
-  <p class="success">Send this code to the bot to pair.</p>
-</div>
+  <footer>
+    &copy; 2024 ArslanMD Official
+  </footer>
 
-<p class="error" id="error" style="display: none;"></p>
+<script>
+  const submitBtn = document.getElementById('submitBtn');
+  const phoneInput = document.getElementById('phoneInput');
+  const errorMsg = document.getElementById('errorMsg');
+  const codeOutput = document.getElementById('codeOutput');
+  const pairingCodeText = document.getElementById('pairingCodeText');
+  const copyBtn = document.getElementById('copyBtn');
 
-  </div>  <script>
-    async function generateCode() {
-      const number = document.getElementById('phoneNumber').value.trim();
-      const errorEl = document.getElementById('error');
-      const resultEl = document.getElementById('result');
-      const codeEl = document.getElementById('pairingCode');
+  function validatePhone(phone) {
+    // Must start with + and contain 10-15 digits
+    const regex = /^\+[0-9]{10,15}$/;
+    return regex.test(phone);
+  }
 
-      errorEl.style.display = 'none';
-      resultEl.style.display = 'none';
+  submitBtn.addEventListener('click', async () => {
+    errorMsg.textContent = '';
+    codeOutput.style.display = 'none';
+    pairingCodeText.textContent = '';
 
-      if (!number || number.length < 10) {
-        errorEl.innerText = "❌ Please enter a valid WhatsApp number.";
-        errorEl.style.display = 'block';
-        return;
-      }
-
-      try {
-        const res = await fetch('/pair', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ number })
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          errorEl.innerText = "❌ " + (data.error || "Something went wrong.");
-          errorEl.style.display = 'block';
-          return;
-        }
-
-        codeEl.innerText = data.code;
-        resultEl.style.display = 'block';
-      } catch (err) {
-        errorEl.innerText = "❌ Server error. Try again later.";
-        errorEl.style.display = 'block';
-      }
+    const phone = phoneInput.value.trim();
+    if (!validatePhone(phone)) {
+      errorMsg.textContent = 'Please enter a valid phone number including country code. Example: +923XXXXXXXXX';
+      return;
     }
 
-    function copyCode() {
-      const code = document.getElementById('pairingCode').innerText;
-      navigator.clipboard.writeText(code);
-      alert("✅ Code copied to clipboard!");
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Generating...';
+
+    try {
+      // Call your API endpoint to get pairing code
+      const response = await fetch('/pair', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone })
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        pairingCodeText.textContent = data.pairingCode;
+        codeOutput.style.display = 'block';
+      } else {
+        errorMsg.textContent = data.error || 'Failed to get pairing code.';
+      }
+    } catch (e) {
+      errorMsg.textContent = 'Network error. Please try again.';
     }
-  </script></body>
+
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Get Pairing Code';
+  });
+
+  copyBtn.addEventListener('click', () => {
+    const code = pairingCodeText.textContent;
+    if (!code) return;
+    navigator.clipboard.writeText(code).then(() => {
+      copyBtn.textContent = 'Copied!';
+      setTimeout(() => {
+        copyBtn.textContent = 'Copy';
+      }, 1500);
+    });
+  });
+</script>
+</body>
 </html>
