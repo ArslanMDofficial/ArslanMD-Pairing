@@ -1,151 +1,115 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Arslan-MD WhatsApp Bot Pairing</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
-  body {
-    margin: 0; padding: 0; background: #121212; color: #eee; font-family: 'Poppins', sans-serif;
-    display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh;
-  }
-  .container {
-    background: #1f1f1f; padding: 30px 40px; border-radius: 12px; width: 100%; max-width: 420px; box-shadow: 0 0 20px #00bcd4cc;
-  }
-  h1 {
-    text-align: center; margin-bottom: 24px; color: #00bcd4;
-    text-shadow: 0 0 8px #00bcd4;
-  }
-  label {
-    font-weight: 600; font-size: 1.1rem; display: block; margin-bottom: 8px;
-  }
-  input[type="tel"] {
-    width: 100%; padding: 12px 15px; font-size: 1rem; border-radius: 8px; border: none;
-    background: #2a2a2a; color: #eee;
-    box-sizing: border-box;
-  }
-  input[type="tel"]::placeholder {
-    color: #999;
-  }
-  button {
-    margin-top: 20px; width: 100%; padding: 14px; font-size: 1.1rem; font-weight: 600;
-    background: #00bcd4; color: #121212; border: none; border-radius: 8px;
-    cursor: pointer; transition: background-color 0.3s ease;
-  }
-  button:hover {
-    background: #0097a7;
-  }
-  .output {
-    margin-top: 28px; font-size: 1.2rem; font-weight: 600; text-align: center;
-    background: #222; padding: 14px 20px; border-radius: 10px; word-break: break-word;
-    position: relative;
-  }
-  .copy-btn {
-    position: absolute; top: 50%; right: 12px; transform: translateY(-50%);
-    background: #00bcd4; border: none; padding: 6px 10px; border-radius: 6px;
-    color: #121212; font-weight: 700; cursor: pointer; transition: background-color 0.3s ease;
-  }
-  .copy-btn:hover {
-    background: #0097a7;
-  }
-  .error {
-    margin-top: 16px; color: #ff4d4d; font-weight: 600; text-align: center;
-  }
-  footer {
-    margin-top: 40px; text-align: center; color: #555; font-size: 0.9rem;
-  }
-  @media (max-width: 480px) {
-    .container {
-      padding: 24px 20px;
-      width: 90%;
+  <meta charset="UTF-8">
+  <title>Arslan-MD Pairing</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      background: #0f172a;
+      color: white;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
     }
-  }
-</style>
+
+    h1 {
+      font-size: 32px;
+      margin-bottom: 20px;
+      color: #38bdf8;
+    }
+
+    input, button {
+      padding: 12px;
+      margin: 8px 0;
+      font-size: 16px;
+      border-radius: 8px;
+      border: none;
+    }
+
+    input {
+      width: 280px;
+    }
+
+    button {
+      background-color: #22c55e;
+      color: white;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background-color: #16a34a;
+    }
+
+    .code-box {
+      margin-top: 20px;
+      padding: 10px;
+      background: #1e293b;
+      border-radius: 8px;
+      display: none;
+      text-align: center;
+    }
+
+    .error {
+      color: #f87171;
+      margin-top: 15px;
+    }
+  </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Arslan-MD WhatsApp Bot Pairing</h1>
-    <label for="phoneInput">Enter your WhatsApp Number (with country code)</label>
-    <input
-      type="tel"
-      id="phoneInput"
-      placeholder="+923XXXXXXXXX"
-      pattern="^\+[0-9]{10,15}$"
-      required
-    />
-    <button id="submitBtn">Get Pairing Code</button>
-    <div id="errorMsg" class="error"></div>
-    <div id="codeOutput" class="output" style="display:none;">
-      Pairing Code: <span id="pairingCodeText"></span>
-      <button class="copy-btn" id="copyBtn" title="Copy code">Copy</button>
-    </div>
+  <h1>🤖 Arslan-MD Bot Pairing</h1>
+
+  <input type="text" id="numberInput" placeholder="Enter WhatsApp Number (e.g. 923001234567)" />
+  <button onclick="submitNumber()">Submit</button>
+
+  <div class="code-box" id="codeBox">
+    <p><strong>Your Pairing Code:</strong></p>
+    <p id="pairingCode" style="font-size: 24px; color: #4ade80;"></p>
+    <button onclick="copyCode()">Copy Code</button>
   </div>
-  <footer>
-    &copy; 2024 ArslanMD Official
-  </footer>
 
-<script>
-  const submitBtn = document.getElementById('submitBtn');
-  const phoneInput = document.getElementById('phoneInput');
-  const errorMsg = document.getElementById('errorMsg');
-  const codeOutput = document.getElementById('codeOutput');
-  const pairingCodeText = document.getElementById('pairingCodeText');
-  const copyBtn = document.getElementById('copyBtn');
+  <div id="errorBox" class="error"></div>
 
-  function validatePhone(phone) {
-    // Must start with + and contain 10-15 digits
-    const regex = /^\+[0-9]{10,15}$/;
-    return regex.test(phone);
-  }
+  <script>
+    async function submitNumber() {
+      const number = document.getElementById("numberInput").value;
+      const errorBox = document.getElementById("errorBox");
+      const codeBox = document.getElementById("codeBox");
+      const pairingCode = document.getElementById("pairingCode");
 
-  submitBtn.addEventListener('click', async () => {
-    errorMsg.textContent = '';
-    codeOutput.style.display = 'none';
-    pairingCodeText.textContent = '';
+      errorBox.textContent = "";
+      codeBox.style.display = "none";
 
-    const phone = phoneInput.value.trim();
-    if (!validatePhone(phone)) {
-      errorMsg.textContent = 'Please enter a valid phone number including country code. Example: +923XXXXXXXXX';
-      return;
-    }
+      try {
+        const response = await fetch("/pair", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ number })
+        });
 
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Generating...';
-
-    try {
-      // Call your API endpoint to get pairing code
-      const response = await fetch('/pair', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone })
-      });
-      const data = await response.json();
-
-      if (response.ok) {
-        pairingCodeText.textContent = data.pairingCode;
-        codeOutput.style.display = 'block';
-      } else {
-        errorMsg.textContent = data.error || 'Failed to get pairing code.';
+        const data = await response.json();
+        if (data.success) {
+          pairingCode.textContent = data.code;
+          codeBox.style.display = "block";
+        } else {
+          errorBox.textContent = data.error || "Something went wrong.";
+        }
+      } catch (err) {
+        errorBox.textContent = "Error connecting to server.";
       }
-    } catch (e) {
-      errorMsg.textContent = 'Network error. Please try again.';
     }
 
-    submitBtn.disabled = false;
-    submitBtn.textContent = 'Get Pairing Code';
-  });
-
-  copyBtn.addEventListener('click', () => {
-    const code = pairingCodeText.textContent;
-    if (!code) return;
-    navigator.clipboard.writeText(code).then(() => {
-      copyBtn.textContent = 'Copied!';
-      setTimeout(() => {
-        copyBtn.textContent = 'Copy';
-      }, 1500);
-    });
-  });
-</script>
+    function copyCode() {
+      const code = document.getElementById("pairingCode").textContent;
+      navigator.clipboard.writeText(code).then(() => {
+        alert("Copied to clipboard!");
+      });
+    }
+  </script>
 </body>
 </html>
