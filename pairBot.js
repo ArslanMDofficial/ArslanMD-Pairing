@@ -9,15 +9,10 @@ const {
     fetchLatestBaileysVersion,
     useMultiFileAuthState,
     makeCacheableSignalKeyStore,
-    PHONENUMBER_MCC,
 } = require("@whiskeysockets/baileys");
 
 async function pairBotWithNumber(phoneNumber) {
     const cleanNumber = phoneNumber.replace(/[^0-9]/g, '');
-    if (!Object.keys(PHONENUMBER_MCC).some(v => cleanNumber.startsWith(v))) {
-        throw new Error("Phone number must start with a valid country code");
-    }
-
     const sessionPath = `./sessions/${cleanNumber}`;
     if (!fs.existsSync(sessionPath)) fs.mkdirSync(sessionPath, { recursive: true });
 
@@ -53,7 +48,6 @@ async function pairBotWithNumber(phoneNumber) {
             }
         });
 
-        // wait for 2 seconds before calling requestPairingCode
         setTimeout(async () => {
             try {
                 if (!sock.authState.creds.registered) {
@@ -68,7 +62,7 @@ async function pairBotWithNumber(phoneNumber) {
                 console.error("❌ Error generating pairing code:", err);
                 reject(err);
             }
-        }, 3000); // wait 3 seconds for stable connection
+        }, 3000);
     });
 }
 
