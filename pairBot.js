@@ -1,5 +1,3 @@
-// pairBot.js
-
 const fs = require("fs");
 const pino = require("pino");
 const NodeCache = require("node-cache");
@@ -32,6 +30,13 @@ async function pairBotWithNumber(phoneNumber) {
     });
 
     sock.ev.on("creds.update", saveCreds);
+
+    sock.ev.on('connection.update', (update) => {
+      console.log('Connection update:', update);
+      if (update.connection === 'close') {
+        console.log('Connection closed:', update.lastDisconnect?.error?.output?.statusCode, update.lastDisconnect?.error?.message);
+      }
+    });
 
     if (!sock.authState.creds.registered) {
         try {
