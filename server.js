@@ -1,32 +1,24 @@
-const express = require('express');
-const path = require('path');
-const cors = require('cors');
-const bodyParser = require('body-parser');
-const { pairBotWithNumber } = require('./pairBot');
-
+const express = require("express");
 const app = express();
-const PORT = process.env.PORT || 3000;
+const port = process.env.PORT || 3000;
+const { pairBotWithNumber } = require("./pairBot");
 
-app.use(cors());
-app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, 'client')));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static("client"));
 
-app.post('/pair', async (req, res) => {
-  const number = req.body.number;
+app.post("/generate", async (req, res) => {
+    const { number } = req.body;
 
-  if (!number || !/^\d{11,15}$/.test(number)) {
-    return res.status(400).json({ success: false, error: 'Valid WhatsApp number required (e.g. 923001234567)' });
-  }
+    if (!number) return res.status(400).json({ error: "Number required" });
 
-  try {
-    const code = await pairBotWithNumber(number);
-    return res.json({ success: true, code });
-  } catch (err) {
-    console.error("Pairing failed:", err);
-    return res.status(500).json({ success: false, error: 'Pairing failed. Try again.' });
-  }
+    try {
+        const code = await pairBotWithNumber(number);
+        res.json({ pairingCode: code });
+    } catch (error) {
+        console.error("Pairing failed:", error);
+        res.status(500).json({ error: "Pairing failed, try again" });
+    }
 });
 
-app.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
-});
+app.listen(port, () => console.log("Server running on port", port));
