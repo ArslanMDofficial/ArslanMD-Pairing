@@ -1,5 +1,5 @@
 {
-  "name": "arslan-md-pairing",
+  "name": "arslan-md-bot",
   "version": "1.0.0",
   "main": "server.js",
   "type": "commonjs",
@@ -7,13 +7,10 @@
     "start": "node server.js"
   },
   "dependencies": {
+    "@whiskeysockets/baileys": "^6.7.0",
     "express": "^4.18.2",
-    "pino": "^8.0.0",
-    "qrcode-terminal": "^0.12.0",
     "node-cache": "^5.1.2",
-    "chalk": "^5.3.0",
-    "@whiskeysockets/baileys": "^6.6.0",
-    "libphonenumber-js": "^1.10.21",
+    "pino": "^8.17.0",
     "cors": "^2.8.5"
   }
 }
