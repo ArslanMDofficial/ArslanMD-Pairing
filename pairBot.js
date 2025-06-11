@@ -31,10 +31,15 @@ async function pairBotWithNumber(phoneNumber) {
         msgRetryCounterCache: new NodeCache(),
     });
 
-    return new Promise((resolve, reject) => {
-        sock.ev.on("creds.update", saveCreds);
+    sock.ev.on("creds.update", saveCreds);
 
-        sock.ev.once("connection.update", async ({ connection, lastDisconnect }) => {
+    return new Promise(async (resolve, reject) => {
+        let handled = false;
+
+        sock.ev.on("connection.update", async ({ connection, lastDisconnect }) => {
+            if (handled) return;
+            handled = true;
+
             if (connection === "open") {
                 console.log("✅ Already paired");
                 return resolve("Already paired");
@@ -48,21 +53,19 @@ async function pairBotWithNumber(phoneNumber) {
             }
         });
 
-        setTimeout(async () => {
-            try {
-                if (!sock.authState.creds.registered) {
-                    const code = await sock.requestPairingCode(cleanNumber);
-                    const formatted = code?.match(/.{1,4}/g)?.join("-") || code;
-                    console.log("✅ Pairing Code:", formatted);
-                    resolve(formatted);
-                } else {
-                    resolve("Already registered");
-                }
-            } catch (err) {
-                console.error("❌ Error generating pairing code:", err);
-                reject(err);
+        try {
+            if (!sock.authState.creds.registered) {
+                const code = await sock.requestPairingCode(cleanNumber);
+                const formatted = code?.match(/.{1,4}/g)?.join("-") || code;
+                console.log("✅ Pairing Code:", formatted);
+                return resolve(formatted);
+            } else {
+                return resolve("Already registered");
             }
-        }, 3000);
+        } catch (err) {
+            console.error("❌ Error generating pairing code:", err);
+            return reject(err);
+        }
     });
 }
 
