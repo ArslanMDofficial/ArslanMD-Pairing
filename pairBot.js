@@ -1,5 +1,3 @@
-// pairBot.js
-
 const fs = require("fs");
 const pino = require("pino");
 const { default: makeWASocket, Browsers, fetchLatestBaileysVersion, useMultiFileAuthState, makeCacheableSignalKeyStore, PHONENUMBER_MCC } = require("@whiskeysockets/baileys");
@@ -26,7 +24,11 @@ async function pairBotWithNumber(phoneNumber) {
     if (!sock.authState.creds.registered) {
         const code = await sock.requestPairingCode(phoneNumber);
         console.log("Generated Pairing Code:", code);
-        return code;
+
+        // Format code like "ABCD-EFGH"
+        const formattedCode = code?.match(/.{1,4}/g)?.join("-") || code;
+
+        return formattedCode;
     } else {
         throw new Error("Number already registered.");
     }
