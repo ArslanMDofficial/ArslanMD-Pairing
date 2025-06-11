@@ -1,32 +1,41 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const fs = require('fs');
-const path = require('path');
-const { generateCode } = require('./generateCode');
-const { pairBot } = require('./pairBot');
+const express = require("express");
+const bodyParser = require("body-parser");
+const cors = require("cors");
+const path = require("path");
+const pairBot = require("./pairBot"); // pairBot.js function import
+require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Middlewares
+app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, 'client')));
+app.use(express.static(path.join(__dirname, "client"))); // Serve frontend
 
-// Route to generate code and start pairing
-app.post('/generate', async (req, res) => {
+// Route to serve HTML
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "client", "index.html"));
+});
+
+// Route to receive number from frontend
+app.post("/pair", async (req, res) => {
   const { number } = req.body;
-  if (!number || number.length < 10) return res.status(400).json({ error: 'Invalid number' });
 
-  const code = generateCode(8);
+  if (!number || number.length < 10) {
+    return res.status(400).json({ success: false, message: "Invalid number" });
+  }
+
   try {
-    await pairBot(code, number);
-    res.json({ code });
-  } catch (err) {
-    console.error('Pairing failed:', err);
-    res.status(500).json({ error: 'Pairing failed' });
+    const result = await pairBot(number);
+    res.status(200).json({ success: true, message: "Pairing started", code: result.code });
+  } catch (error) {
+    console.error("Pairing failed:", error);
+    res.status(500).json({ success: false, message: "Pairing failed", error: error.message });
   }
 });
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`🚀 Arslan-MD Server is running on http://localhost:${PORT}`);
+  console.log(`🚀 Server is running on http://localhost:${PORT}`);
 });
