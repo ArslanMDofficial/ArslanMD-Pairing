@@ -1,115 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Arslan-MD Pairing</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body {
-      background: #0f172a;
-      color: white;
-      font-family: Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      padding: 20px;
-    }
+    <meta charset="UTF-8">
+    <title>Arslan-MD Pairing</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #0f0f0f;
+            color: #fff;
+            text-align: center;
+            padding: 40px;
+        }
 
-    h1 {
-      font-size: 32px;
-      margin-bottom: 20px;
-      color: #38bdf8;
-    }
+        input, button {
+            padding: 10px;
+            margin: 10px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+        }
 
-    input, button {
-      padding: 12px;
-      margin: 8px 0;
-      font-size: 16px;
-      border-radius: 8px;
-      border: none;
-    }
+        input {
+            width: 250px;
+        }
 
-    input {
-      width: 280px;
-    }
+        button {
+            background-color: #28a745;
+            color: white;
+            cursor: pointer;
+        }
 
-    button {
-      background-color: #22c55e;
-      color: white;
-      cursor: pointer;
-      transition: 0.3s;
-    }
+        button:hover {
+            background-color: #218838;
+        }
 
-    button:hover {
-      background-color: #16a34a;
-    }
+        #pairingCodeBox {
+            margin-top: 20px;
+            font-size: 20px;
+            color: #00ffcc;
+        }
 
-    .code-box {
-      margin-top: 20px;
-      padding: 10px;
-      background: #1e293b;
-      border-radius: 8px;
-      display: none;
-      text-align: center;
-    }
-
-    .error {
-      color: #f87171;
-      margin-top: 15px;
-    }
-  </style>
+        #errorBox {
+            margin-top: 10px;
+            color: red;
+        }
+    </style>
 </head>
 <body>
-  <h1>🤖 Arslan-MD Bot Pairing</h1>
+    <h1>🤖 Arslan-MD WhatsApp Bot Pairing</h1>
+    <p>Enter your WhatsApp number (with country code):</p>
 
-  <input type="text" id="numberInput" placeholder="Enter WhatsApp Number (e.g. 923001234567)" />
-  <button onclick="submitNumber()">Submit</button>
+    <input type="text" id="numberInput" placeholder="+923xxxxxxxxx" />
+    <br>
+    <button onclick="submitNumber()">Submit</button>
 
-  <div class="code-box" id="codeBox">
-    <p><strong>Your Pairing Code:</strong></p>
-    <p id="pairingCode" style="font-size: 24px; color: #4ade80;"></p>
-    <button onclick="copyCode()">Copy Code</button>
-  </div>
+    <div id="pairingCodeBox"></div>
+    <button id="copyButton" onclick="copyCode()" style="display:none;">Copy Code</button>
+    <div id="errorBox"></div>
 
-  <div id="errorBox" class="error"></div>
+    <script>
+        async function submitNumber() {
+            const number = document.getElementById("numberInput").value;
+            const pairingCodeBox = document.getElementById("pairingCodeBox");
+            const errorBox = document.getElementById("errorBox");
+            const copyButton = document.getElementById("copyButton");
 
-  <script>
-    async function submitNumber() {
-      const number = document.getElementById("numberInput").value;
-      const errorBox = document.getElementById("errorBox");
-      const codeBox = document.getElementById("codeBox");
-      const pairingCode = document.getElementById("pairingCode");
+            pairingCodeBox.innerText = "";
+            errorBox.innerText = "";
+            copyButton.style.display = "none";
 
-      errorBox.textContent = "";
-      codeBox.style.display = "none";
+            if (!number) {
+                errorBox.innerText = "Please enter your WhatsApp number.";
+                return;
+            }
 
-      try {
-        const response = await fetch("/pair", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ number })
-        });
+            try {
+                const response = await fetch("https://arslanmd-pairing-site.onrender.com/generate", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ number: number.replace(/\D/g, "") }) // remove non-numbers
+                });
 
-        const data = await response.json();
-        if (data.success) {
-          pairingCode.textContent = data.code;
-          codeBox.style.display = "block";
-        } else {
-          errorBox.textContent = data.error || "Something went wrong.";
+                const data = await response.json();
+
+                if (response.ok) {
+                    pairingCodeBox.innerText = `Your Pairing Code: ${data.pairingCode}`;
+                    copyButton.style.display = "inline-block";
+                } else {
+                    errorBox.innerText = data.error || "Something went wrong. Try again.";
+                }
+            } catch (err) {
+                errorBox.innerText = "Error connecting to server.";
+                console.error(err);
+            }
         }
-      } catch (err) {
-        errorBox.textContent = "Error connecting to server.";
-      }
-    }
 
-    function copyCode() {
-      const code = document.getElementById("pairingCode").textContent;
-      navigator.clipboard.writeText(code).then(() => {
-        alert("Copied to clipboard!");
-      });
-    }
-  </script>
+        function copyCode() {
+            const text = document.getElementById("pairingCodeBox").innerText.replace("Your Pairing Code: ", "");
+            navigator.clipboard.writeText(text).then(() => {
+                alert("Code copied to clipboard!");
+            });
+        }
+    </script>
 </body>
 </html>
